@@ -1,0 +1,28 @@
+{
+  "name": "azure-function-mssql-keyvault",
+  "version": "1.0.0",
+  "description": "Azure Function App with MSSQL and Key Vault integration",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node -e \"require('./src/utils/migration').runMigrations(require('./src/config/database').getSequelize())\"",
+    "migrate:create": "node -e \"const name = process.argv[1]; if(!name) throw new Error('Migration name required'); require('./src/utils/migration').createMigration(name)\" --",
+    "migrate:status": "node -e \"require('./src/utils/migration').getMigrationStatus(require('./src/config/database').getSequelize())\"",
+    "migrate:undo": "node -e \"require('./src/utils/migration').undoLastMigration(require('./src/config/database').getSequelize())\"",
+    "migrate:undo:all": "node -e \"require('./src/utils/migration').undoAllMigrations(require('./src/config/database').getSequelize())\""
+  },
+  "dependencies": {
+    "@azure/identity": "^3.3.0",
+    "@azure/keyvault-secrets": "^4.7.0",
+    "@microsoft/applicationinsights-web": "^2.8.14",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.32.1",
+    "tedious": "^16.4.0",
+    "uuid": "^9.0.1"
+  }
+}

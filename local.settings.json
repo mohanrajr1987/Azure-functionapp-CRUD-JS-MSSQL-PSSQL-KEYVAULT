@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "AZURE_KEYVAULT_URL": "https://your-keyvault.vault.azure.net/",
+    "WEBSITE_NODE_DEFAULT_VERSION": "~20",
+    "APPINSIGHTS_INSTRUMENTATIONKEY": "your-instrumentation-key",
+    "NODE_ENV": "development"
+  }
+}
