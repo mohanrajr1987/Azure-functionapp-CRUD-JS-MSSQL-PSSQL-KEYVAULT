@@ -4,22 +4,44 @@ const { logRequest } = require('../utils/logger');
 class UserController {
     async createUser(context, req) {
         try {
+            // Validate required fields
+            const { name, email, password } = req.body;
+            if (!name || !email || !password) {
+                return {
+                    status: 400,
+                    body: { error: 'Name, email, and password are required' }
+                };
+            }
+
             const user = await userService.createUser(req.body);
-            logRequest('createUser', req.url, 200, true);
+            logRequest('createUser', req.url, 201, true);
             
             return {
                 status: 201,
                 body: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email
+                    message: 'User created successfully',
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email
+                    }
                 }
             };
         } catch (error) {
             logRequest('createUser', req.url, 400, false, { error: error.message });
             
+            // Handle different types of errors
+            let status = 400;
+            if (error.message === 'User already exists') {
+                status = 409;
+            } else if (error.message.includes('Invalid email format')) {
+                status = 422;
+            } else if (error.message.includes('Password must')) {
+                status = 422;
+            }
+            
             return {
-                status: error.message === 'User already exists' ? 409 : 400,
+                status,
                 body: { error: error.message }
             };
         }
@@ -160,5 +182,6 @@ class UserController {
             };
         }
     }
+}
 
 module.exports = new UserController();

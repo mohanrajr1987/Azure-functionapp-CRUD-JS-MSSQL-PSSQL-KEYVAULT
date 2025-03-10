@@ -5,21 +5,64 @@ const configManager = require('../config/config');
 const { logEvent, logException } = require('../utils/logger');
 
 class UserService {
+    validatePassword(password) {
+        if (!password || password.length < 8) {
+            throw new Error('Password must be at least 8 characters long');
+        }
+        
+        // Check for at least one uppercase letter
+        if (!/[A-Z]/.test(password)) {
+            throw new Error('Password must contain at least one uppercase letter');
+        }
+        
+        // Check for at least one lowercase letter
+        if (!/[a-z]/.test(password)) {
+            throw new Error('Password must contain at least one lowercase letter');
+        }
+        
+        // Check for at least one number
+        if (!/[0-9]/.test(password)) {
+            throw new Error('Password must contain at least one number');
+        }
+        
+        // Check for at least one special character
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            throw new Error('Password must contain at least one special character');
+        }
+    }
+
     async createUser(userData) {
         try {
             const User = getModel();
+            
+            // Validate email format
+            if (!userData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+                throw new Error('Invalid email format');
+            }
+
+            // Validate password strength
+            this.validatePassword(userData.password);
+
+            // Check for existing user
             const existingUser = await User.findOne({ where: { email: userData.email } });
             if (existingUser) {
                 throw new Error('User already exists');
             }
 
+            // Create user with sanitized data
             const user = await User.create({
-                ...userData,
+                name: userData.name.trim(),
+                email: userData.email.toLowerCase().trim(),
+                password: userData.password,
                 tokenVersion: 0,
                 lastLogin: new Date()
             });
+
             logEvent('user_created', { userId: user.id });
-            return user;
+            
+            // Return user without sensitive data
+            const { password, refreshToken, ...userWithoutSensitiveData } = user.toJSON();
+            return userWithoutSensitiveData;
         } catch (error) {
             logException(error);
             throw error;
