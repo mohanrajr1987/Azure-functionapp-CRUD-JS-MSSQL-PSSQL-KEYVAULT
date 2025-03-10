@@ -285,6 +285,82 @@ All API responses follow this format:
 ## Security Features
 
 ### Authentication
+
+#### JWT Configuration
+1. **Generate Secure JWT Secrets**
+
+Run these commands to generate cryptographically secure random secrets:
+```bash
+# Generate JWT access token secret
+node -e "console.log('JWT_SECRET=' + require('crypto').randomBytes(64).toString('hex'))"
+
+# Generate JWT refresh token secret
+node -e "console.log('JWT_REFRESH_SECRET=' + require('crypto').randomBytes(64).toString('hex'))"
+```
+
+2. **Update Environment Variables**
+
+Add the generated secrets to your `.env` file:
+```env
+# JWT Configuration
+JWT_SECRET=your_generated_jwt_secret
+JWT_REFRESH_SECRET=your_generated_refresh_secret
+```
+
+3. **Security Best Practices**
+- Use different secrets for access and refresh tokens
+- Generate secrets using cryptographically secure methods
+- Use at least 64 bytes (128 hex characters) for each secret
+- Never commit secrets to version control
+- Store secrets in Azure Key Vault for production
+- Rotate secrets periodically
+
+4. **Azure Key Vault Setup**
+
+Store JWT secrets in Azure Key Vault for production:
+```bash
+# Login to Azure
+az login
+
+# Create Key Vault (if not exists)
+az keyvault create \
+  --name <your-keyvault-name> \
+  --resource-group <your-resource-group> \
+  --location <location>
+
+# Store JWT secrets
+az keyvault secret set \
+  --vault-name <your-keyvault-name> \
+  --name "JWT-SECRET" \
+  --value "$(node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")"
+
+az keyvault secret set \
+  --vault-name <your-keyvault-name> \
+  --name "JWT-REFRESH-SECRET" \
+  --value "$(node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")"
+
+# Grant Function App access to Key Vault
+az keyvault set-policy \
+  --name <your-keyvault-name> \
+  --object-id <function-app-managed-identity-id> \
+  --secret-permissions get list
+```
+
+5. **Access Secrets in Code**
+```javascript
+const { DefaultAzureCredential } = require('@azure/identity');
+const { SecretClient } = require('@azure/keyvault-secrets');
+
+const credential = new DefaultAzureCredential();
+const vaultUrl = `https://${process.env.KEYVAULT_NAME}.vault.azure.net`;
+const secretClient = new SecretClient(vaultUrl, credential);
+
+// Get JWT secrets
+const jwtSecret = await secretClient.getSecret('JWT-SECRET');
+const jwtRefreshSecret = await secretClient.getSecret('JWT-REFRESH-SECRET');
+```
+
+#### Authentication Features
 - JWT-based authentication
 - Refresh token rotation
 - Secure password hashing with bcrypt
